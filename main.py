@@ -1,25 +1,23 @@
 # main.py
 
+from fastapi import FastAPI, HTTPException
 from typing import Dict
 import asyncio
 
-class Product:
-    """
-    A class to represent a product in the Walmart system.
-    """
+app = FastAPI(
+    title="Walmart Product API",
+    description="A simple API for retrieving product details."
+)
 
+class Product:
     def __init__(self, product_id: str, name: str, price: float):
         self.product_id = product_id
         self.name = name
         self.price = price
 
     async def get_details(self) -> Dict:
-        """
-        Asynchronously retrieves product details.
-        Simulates an I/O operation like a database call.
-        """
         print(f"Fetching details for product {self.product_id}...")
-        await asyncio.sleep(1) # Simulate network or database delay
+        await asyncio.sleep(0.5)
         return {
             "product_id": self.product_id,
             "name": self.name,
@@ -27,12 +25,19 @@ class Product:
             "status": "Available"
         }
 
-async def main():
-    # Example usage of the Product class
-    toy = Product(product_id="12345", name="Lego Set", price=49.99)
-    details = await toy.get_details()
-    print(details)
+mock_db = {
+    "12345": Product(product_id="12345", name="Lego Set", price=49.99),
+    "67890": Product(product_id="67890", name="Echo Dot", price=39.99),
+}
+
+@app.get("/product/{product_id}", response_model=Dict)
+async def get_product(product_id: str):
+    product = mock_db.get(product_id)
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    details = await product.get_details()
+    return details
 
 if __name__ == "__main__":
-    # Run the main asynchronous function
-    asyncio.run(main())
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
