@@ -1,0 +1,11 @@
+Policy: Remote Work
+Walmart's flexible work model combines the benefits of in-office collaboration with the flexibility of remote work. Associates in eligible roles can work from home on approved days, supporting a better work-life balance.
+
+Policy: Vacation and Paid Time Off
+Full-time associates are eligible for Paid Time Off (PTO) after 90 days of continuous service. The amount of PTO granted depends on tenure and role. Part-time associates accrue PTO based on hours worked.
+
+Policy: Generative AI Use
+All associates are encouraged to explore Generative AI tools to improve productivity. However, associates must never input confidential, proprietary, or customer data into public-facing AI tools. All use must comply with Walmart's data privacy and security policies.
+
+Policy: Company email
+All associates should to use the corporative email to send sensitive information.
