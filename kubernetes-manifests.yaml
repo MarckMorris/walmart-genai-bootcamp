@@ -1,0 +1,85 @@
+# kubernetes-manifests.yaml
+
+# Deployment para tu API de FastAPI
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: walmart-genai-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: walmart-genai-api
+  template:
+    metadata:
+      labels:
+        app: walmart-genai-api
+    spec:
+      containers:
+      - name: walmart-genai-api
+        image: walmart-genai-api:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 8000
+        env:
+        - name: OLLAMA_HOST
+          value: "http://host.minikube.internal:11434"
+
+---
+
+# Service para la API (tipo ClusterIP)
+# Solo accesible dentro del clúster, ya que el front-end lo necesita internamente.
+apiVersion: v1
+kind: Service
+metadata:
+  name: walmart-genai-api
+spec:
+  selector:
+    app: walmart-genai-api
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000
+  type: ClusterIP
+
+---
+
+# Deployment para el front-end
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: walmart-genai-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: walmart-genai-frontend
+  template:
+    metadata:
+      labels:
+        app: walmart-genai-frontend
+    spec:
+      containers:
+      - name: walmart-genai-frontend
+        image: walmart-genai-frontend:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 80
+
+---
+
+# Service para el front-end (tipo NodePort)
+# Este lo necesitas para acceder a la aplicación desde tu navegador.
+apiVersion: v1
+kind: Service
+metadata:
+  name: walmart-genai-frontend
+spec:
+  selector:
+    app: walmart-genai-frontend
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+      nodePort: 30080
+  type: NodePort

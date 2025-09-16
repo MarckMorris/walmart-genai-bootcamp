@@ -3,194 +3,146 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Walmart GenAI Chat</title>
-    <!-- Tailwind CSS CDN for styling -->
+    <title>Walmart AI Chat Simulation</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f0f4f8; /* Light gray background */
+            background: linear-gradient(to right, #007bff, #1a237e);
         }
         .chat-container {
+            height: calc(100vh - 4rem);
             max-width: 800px;
-            height: calc(100vh - 100px); /* Full height minus footer/header space */
-            margin: auto;
+            margin: 2rem auto;
             display: flex;
             flex-direction: column;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            background-color: white;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
             overflow: hidden;
-        }
-        .chat-history {
-            flex-grow: 1;
-            padding: 24px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column-reverse; /* New messages at the bottom */
-        }
-        .chat-input-area {
-            display: flex;
-            padding: 16px;
-            border-top: 1px solid #e2e8f0;
-            background-color: #f8fafc;
+            background-color: white;
         }
         .message-bubble {
-            max-width: 85%;
-            padding: 12px 18px;
-            border-radius: 20px;
-            margin-bottom: 12px;
-            line-height: 1.5;
+            max-width: 80%;
         }
         .user-message {
-            background-color: #3b82f6; /* Blue for user messages */
-            color: white;
-            align-self: flex-end;
-            border-bottom-right-radius: 4px;
+            background-color: #e2f0ff;
+            color: #004d99;
         }
-        .llm-message {
-            background-color: #e2e8f0; /* Light gray for LLM messages */
-            color: #1a202c;
-            align-self: flex-start;
-            border-bottom-left-radius: 4px;
+        .ai-message {
+            background-color: #f3f4f6;
+            color: #333;
         }
-        .context-info {
-            font-size: 0.8em;
-            color: #4a5568;
-            margin-top: 8px;
-            padding-left: 10px;
-            border-left: 2px solid #a0aec0;
-            background-color: #f7fafc;
-            border-radius: 4px;
-            padding: 8px;
-        }
-        .loading-dots {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 16px;
-        }
-        .loading-dot {
-            width: 10px;
-            height: 10px;
-            background-color: #64748b;
+        .loading-animation {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-top: 4px solid #4a90e2;
             border-radius: 50%;
-            margin: 0 4px;
-            animation: bounce 1s infinite;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
         }
-        .loading-dot:nth-child(2) { animation-delay: 0.2s; }
-        .loading-dot:nth-child(3) { animation-delay: 0.4s; }
-        @keyframes bounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
-<body class="bg-gray-100 p-8 flex flex-col items-center">
-
+<body class="flex items-center justify-center p-4">
     <div class="chat-container">
-        <!-- Chat History -->
-        <div id="chat-history" class="chat-history">
-            <!-- Messages will be injected here by JavaScript -->
+        <header class="p-4 bg-gray-800 text-white text-center text-2xl font-bold">
+            Walmart GenAI Chat v2
+</header>
+        <div id="status-message" class="p-2 text-center text-sm font-semibold text-green-600">
+            Chat simulation running.
         </div>
-
-        <!-- Loading indicator -->
-        <div id="loading-indicator" class="loading-dots hidden">
-            <div class="loading-dot"></div>
-            <div class="loading-dot"></div>
-            <div class="loading-dot"></div>
+        <div id="chat-window" class="flex-1 p-6 overflow-y-auto space-y-4">
+            <!-- Chat messages will be appended here -->
         </div>
-
-        <!-- Input Area -->
-        <div class="chat-input-area">
-            <input 
-                type="text" 
-                id="prompt-input" 
-                placeholder="Questions about Walmart policies..." 
-                class="flex-1 rounded-full border border-gray-300 px-4 py-2 mr-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                onkeypress="handleKeyPress(event)"
-            />
-            <button 
-                id="send-button"
-                class="bg-blue-600 text-white rounded-full px-6 py-2 hover:bg-blue-700 transition duration-300 shadow-lg"
-            >
-                Enviar
+        <form id="chat-form" class="p-4 border-t border-gray-200 bg-white flex items-center">
+            <input type="text" id="prompt-input" placeholder="Ask about Walmart policies..."
+                   class="flex-1 p-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <button type="submit" id="send-btn"
+                    class="ml-4 p-3 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
+                </svg>
             </button>
-        </div>
+        </form>
     </div>
-
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const sendButton = document.getElementById('send-button');
-            const promptInput = document.getElementById('prompt-input');
-            const chatHistory = document.getElementById('chat-history');
-            const loadingIndicator = document.getElementById('loading-indicator');
+        // Use the correct IDs from the HTML
+        const chatWindow = document.getElementById('chat-window');
+        const promptInput = document.getElementById('prompt-input');
+        const chatForm = document.getElementById('chat-form');
 
-            // Function to add a message bubble to the chat history
-            function addMessage(text, sender, context = null) {
-                const messageDiv = document.createElement('div');
-                messageDiv.classList.add('message-bubble', sender === 'user' ? 'user-message' : 'llm-message');
-                messageDiv.textContent = text;
-                
-                if (context && sender === 'llm') {
-                    const contextDiv = document.createElement('div');
-                    contextDiv.classList.add('context-info');
-                    contextDiv.innerHTML = `<strong>Contexto utilizado:</strong><br>${context.replace(/\n/g, '<br>')}`;
-                    messageDiv.appendChild(contextDiv);
-                }
-                
-                chatHistory.prepend(messageDiv); // Prepend to show new messages at the top
-                chatHistory.scrollTop = chatHistory.scrollHeight;
+        // URL del servicio de la API dentro del clúster de Kubernetes
+        const API_URL = "http://localhost:8000/ask"; 
+
+        function addMessage(sender, message) {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message-bubble', 'rounded-lg', 'p-3', 'shadow-md');
+            if (sender === 'user') {
+                messageElement.classList.add('bg-blue-100', 'text-blue-800', 'self-end');
+                messageElement.style.marginLeft = 'auto'; // Align to the right
+            } else {
+                messageElement.classList.add('bg-gray-100', 'text-gray-800', 'self-start');
+                messageElement.style.marginRight = 'auto'; // Align to the left
             }
+            messageElement.innerHTML = `<p class="font-semibold">${sender === 'user' ? 'Tú' : 'Asistente'}:</p><p>${message}</p>`;
+            chatWindow.appendChild(messageElement);
+            chatWindow.scrollTop = chatWindow.scrollHeight; // Auto-scroll
+        }
 
-            // Function to handle sending the prompt
-            async function sendMessage() {
-                const prompt = promptInput.value.trim();
-                if (prompt === '') {
-                    return;
+        async function sendMessage() {
+            const userMessage = promptInput.value.trim();
+            if (userMessage === '') return;
+
+            addMessage('user', userMessage);
+            promptInput.value = '';
+
+            const loadingIndicator = document.createElement('div');
+            loadingIndicator.id = 'loading-indicator';
+            loadingIndicator.classList.add('flex', 'items-center', 'space-x-2', 'p-3');
+            loadingIndicator.innerHTML = `<div class="loading-animation"></div><p>El asistente está escribiendo...</p>`;
+            chatWindow.appendChild(loadingIndicator);
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ prompt: userMessage })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Error de red: ${response.status}`);
                 }
 
-                addMessage(prompt, 'user');
-                promptInput.value = '';
+                const data = await response.json();
+                
+                chatWindow.removeChild(loadingIndicator);
+                addMessage('ai', data.response);
 
-                loadingIndicator.classList.remove('hidden');
-
-                try {
-                    const response = await fetch('http://localhost:8000/ask_rag', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ prompt: prompt }),
-                    });
-
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-
-                    const data = await response.json();
-                    
-                    // Add LLM response with context to the chat
-                    addMessage(data.response, 'llm', data.context_used);
-
-                } catch (error) {
-                    console.error('Error al llamar a la API:', error);
-                    addMessage('Error: There was a problem trying to connect with the console.', 'llm');
-                } finally {
-                    loadingIndicator.classList.add('hidden');
+            } catch (error) {
+                console.error('Error sending request:', error);
+                
+                const currentLoadingIndicator = document.getElementById('loading-indicator');
+                if (currentLoadingIndicator) {
+                    chatWindow.removeChild(currentLoadingIndicator);
                 }
+                
+                addMessage('ai', 'I am sorry the AI asistand is not working, please check the backend.');
             }
+        }
 
-            // Event listeners for button click and 'Enter' key press
-            sendButton.addEventListener('click', sendMessage);
-            promptInput.addEventListener('keypress', (event) => {
-                if (event.key === 'Enter') {
-                    sendMessage();
-                }
-            });
+        chatForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            sendMessage();
         });
     </script>
-
 </body>
 </html>

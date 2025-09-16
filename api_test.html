@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prueba de Conexión al Backend</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+    <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-xl flex flex-col h-[70vh] border border-gray-200">
+        <div class="flex-grow overflow-y-auto mb-4 p-4 space-y-4 bg-gray-50 rounded-lg border">
+            <div id="chat-container" class="space-y-4">
+                <!-- Los mensajes del chat se añadirán aquí -->
+            </div>
+            <div id="status" class="text-sm italic text-gray-500 text-center hidden">
+                El asistente está escribiendo...
+            </div>
+        </div>
+        <div class="flex items-center space-x-2">
+            <input type="text" id="message-input" placeholder="Escribe tu mensaje..." class="flex-grow p-3 rounded-lg border-2 border-gray-300 focus:outline-none focus:border-blue-500 transition-colors">
+            <button id="send-button" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+                Enviar
+            </button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const chatContainer = document.getElementById('chat-container');
+            const messageInput = document.getElementById('message-input');
+            const sendButton = document.getElementById('send-button');
+            const statusIndicator = document.getElementById('status');
+            // La URL se ha corregido para que coincida con el endpoint de la API en main.py
+            const API_URL = 'http://localhost:8000/ask';
+
+            function addMessageToChat(text, sender) {
+                const messageDiv = document.createElement('div');
+                const textSpan = document.createElement('span');
+                textSpan.textContent = text;
+                
+                if (sender === 'user') {
+                    messageDiv.className = 'flex justify-end';
+                    textSpan.className = 'bg-blue-500 text-white rounded-xl py-2 px-4 max-w-md break-words shadow-sm';
+                } else {
+                    messageDiv.className = 'flex justify-start';
+                    textSpan.className = 'bg-gray-300 text-gray-800 rounded-xl py-2 px-4 max-w-md break-words shadow-sm';
+                }
+                
+                messageDiv.appendChild(textSpan);
+                chatContainer.appendChild(messageDiv);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }
+
+            async function sendMessage() {
+                const message = messageInput.value.trim();
+                if (!message) return;
+
+                addMessageToChat(message, 'user');
+                messageInput.value = '';
+                statusIndicator.classList.remove('hidden');
+
+                try {
+                    const response = await fetch(API_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        // El cuerpo de la solicitud se ha corregido para usar 'prompt' en lugar de 'message'
+                        body: JSON.stringify({ prompt: message }),
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`Error HTTP: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    // La respuesta de la API ahora se espera en `data.response`
+                    addMessageToChat(data.response, 'assistant');
+                } catch (error) {
+                    console.error('Error al conectar con la API:', error);
+                    addMessageToChat(`Lo siento, no pude conectarme con el asistente de IA. Error: ${error.message}`, 'assistant');
+                } finally {
+                    statusIndicator.classList.add('hidden');
+                }
+            }
+
+            sendButton.addEventListener('click', sendMessage);
+
+            messageInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

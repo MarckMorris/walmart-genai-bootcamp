@@ -1,0 +1,12 @@
+# Usa una imagen base de Nginx muy ligera.
+FROM nginx:stable-alpine
+
+# Copia el contenido de tu directorio actual
+# (incluyendo index.html) al directorio de servicio de Nginx.
+COPY . /usr/share/nginx/html
+
+# Expone el puerto 80 del contenedor.
+EXPOSE 80
+
+# El comando por defecto para iniciar Nginx.
+CMD ["nginx", "-g", "daemon off;"]
